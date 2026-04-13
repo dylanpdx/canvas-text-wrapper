@@ -56,6 +56,10 @@ export interface CanvasTextWrapperOptions {
     */
    maxFontSizeToFill?: number,
    /**
+    * If above option is true text won't be smaller than set.
+    */
+   minFontSize?:nunber,
+   /**
     * Allow text outline based on canvas context configuration.
     */
    strokeText?: boolean,

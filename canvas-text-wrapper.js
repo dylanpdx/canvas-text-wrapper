@@ -7,6 +7,7 @@
       font: '18px Arial, sans-serif',
       sizeToFill: false,
       maxFontSizeToFill: false,
+      minFontSize:0,
       lineHeight: 1,
       allowNewLine: true,
       lineBreak: 'auto',
@@ -126,11 +127,16 @@
               break;
             }
           } else {
-            adjustFontSize(++newFontSize);
+            if (newFontSize + 1 >= opts.minFontSize) {
+              adjustFontSize(++newFontSize);
+            } else {
+              break;
+            }
           }
         } while (textBlockHeight < MAX_TXT_HEIGHT && (lines.join(' ').split(/\s+/).length == wordsCount));
 
-        adjustFontSize(--newFontSize);
+        newFontSize = Math.max(newFontSize - 1, opts.minFontSize);
+        adjustFontSize(newFontSize);
       } else {
         wrap();
       }
@@ -145,6 +151,7 @@
     }
 
     function adjustFontSize(size) {
+      size = Math.max(size, opts.minFontSize);
       setFont(size);
       lineHeight = size;
       wrap();
