@@ -7,7 +7,7 @@
       font: '18px Arial, sans-serif',
       sizeToFill: false,
       maxFontSizeToFill: false,
-      minFontSize:0,
+      minFontSizeToFill: false,
       lineHeight: 1,
       allowNewLine: true,
       lineBreak: 'auto',
@@ -118,8 +118,12 @@
         var wordsCount = text.trim().split(/\s+/).length;
         var newFontSize = 0;
         var fontSizeHasLimit = opts.maxFontSizeToFill !== false;
+        var fontSizeHasMinimum = opts.minFontSizeToFill !== false;
 
         do {
+          if (fontSizeHasMinimum && (newFontSize + 1) < opts.minFontSizeToFill) {
+            newFontSize = opts.minFontSizeToFill - 1;
+          }
           if (fontSizeHasLimit) {
             if (++newFontSize <= opts.maxFontSizeToFill) {
               adjustFontSize(newFontSize);
@@ -127,15 +131,14 @@
               break;
             }
           } else {
-            if (newFontSize + 1 >= opts.minFontSize) {
-              adjustFontSize(++newFontSize);
-            } else {
-              break;
-            }
+            adjustFontSize(++newFontSize);
           }
         } while (textBlockHeight < MAX_TXT_HEIGHT && (lines.join(' ').split(/\s+/).length == wordsCount));
 
-        newFontSize = Math.max(newFontSize - 1, opts.minFontSize);
+        newFontSize--;
+        if (fontSizeHasMinimum && newFontSize < opts.minFontSizeToFill) {
+          newFontSize = opts.minFontSizeToFill;
+        }
         adjustFontSize(newFontSize);
       } else {
         wrap();
@@ -151,7 +154,6 @@
     }
 
     function adjustFontSize(size) {
-      size = Math.max(size, opts.minFontSize);
       setFont(size);
       lineHeight = size;
       wrap();
@@ -176,20 +178,22 @@
     function checkLength(words) {
       var testString, tokenLen, sliced, leftover;
 
-      words.forEach(function (word, index) {
+      for (var index = 0; index < words.length; index++) { // keep splitting a word until it fits
         testString = '';
-        tokenLen = context.measureText(word).width;
+        tokenLen = context.measureText(words[index]).width;
 
         if (tokenLen > MAX_TXT_WIDTH) {
+          var word = words[index];
           for (var k = 0; (context.measureText(testString + word[k]).width <= MAX_TXT_WIDTH) && (k < word.length); k++) {
             testString += word[k];
           }
+          if (k === 0) k = 1; // fix infinite loop w/ small canvases
 
           sliced = word.slice(0, k);
           leftover = word.slice(k);
           words.splice(index, 1, sliced, leftover);
         }
-      });
+      }
     }
 
     function breakText(words) {
@@ -199,7 +203,8 @@
 
         if (opts.lineBreak === 'auto') {
           if (context.measureText(lines[j] + words[i]).width > MAX_TXT_WIDTH) {
-            break;
+            lines[j] = words[i];
+            i++;
           } else {
             while ((context.measureText(lines[j] + words[i]).width <= MAX_TXT_WIDTH) && (i < words.length)) {
 
@@ -369,6 +374,9 @@
 
       if (opts.textDecoration.toLocaleLowerCase() !== 'none' && opts.textDecoration.toLocaleLowerCase() !== 'underline')
         throw new TypeError('Property "textDecoration" must be set to either "none" or "underline".');
+
+      if (opts.minFontSizeToFill !== false && opts.maxFontSizeToFill !== false && opts.minFontSizeToFill > opts.maxFontSizeToFill)
+        throw new TypeError('Property "minFontSizeToFill" must be less than or equal to "maxFontSizeToFill".');
     }
 
     return(lines);

@@ -58,7 +58,7 @@ export interface CanvasTextWrapperOptions {
    /**
     * If above option is true text won't be smaller than set.
     */
-   minFontSize?:nunber,
+   minFontSizeToFill?:nunber,
    /**
     * Allow text outline based on canvas context configuration.
     */
